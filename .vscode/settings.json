@@ -1,0 +1,4 @@
+{
+    "dotnet.defaultSolution": "backend.slnx",
+    "C_Cpp.errorSquiggles": "disabled"
+}
