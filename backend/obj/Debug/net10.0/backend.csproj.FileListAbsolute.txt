@@ -146,3 +146,4 @@ D:\D\Every Project require for techstack\Viking Language Chatter\backend\bin\Deb
 D:\D\Every Project require for techstack\Viking Language Chatter\backend\bin\Debug\net10.0\runtimes\win-arm64\native\e_sqlite3.dll
 D:\D\Every Project require for techstack\Viking Language Chatter\backend\bin\Debug\net10.0\runtimes\win-x64\native\e_sqlite3.dll
 D:\D\Every Project require for techstack\Viking Language Chatter\backend\bin\Debug\net10.0\runtimes\win-x86\native\e_sqlite3.dll
+D:\D\Every Project require for techstack\Viking Language Chatter\backend\obj\Debug\net10.0\backend.sourcelink.json

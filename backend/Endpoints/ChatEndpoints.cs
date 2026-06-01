@@ -25,7 +25,7 @@ public static class ChatEndpoints
 
             // 3. Transform the data into MessageDto and execute the query safely
             var result = await query
-                .Select(m => new MessageDto(m.Id, m.Content))
+                .Select(m => new MessageDto(m.Id, m.Content, m.UserId))
                 .ToListAsync();
 
             // 4. Return the results to the client
@@ -65,7 +65,7 @@ public static class ChatEndpoints
             db.Messages.Add(messageEntity);
             await db.SaveChangesAsync();
 
-            var responseDto = new MessageDto(messageEntity.Id, messageEntity.Content);
+            var responseDto = new MessageDto(messageEntity.Id, messageEntity.Content, messageEntity.UserId);
 
             return Results.Created($"/chatlog/{responseDto.Id}", responseDto);
         });
