@@ -5,6 +5,7 @@ import Profile from './components/Profile';
 export default function App() {
   // State to track which page we are looking at: 'home' or 'profile'
   const [currentView, setCurrentView] = useState('home');
+  
 
   return (
     <div style={{ background: '#121212', color: '#e0e0e0', minHeight: '100vh', fontFamily: 'sans-serif' }}>

@@ -1,11 +1,32 @@
 import React, { useState } from 'react';
 
+const BASE_URL = "http://localhost:5206";
+
 export default function Home() {
   // Temporary hardcoded messages to test our UI rendering loop
   const [messages, setMessages] = useState([
     { id: 1, message: "Hello from User One!", userId: 1 },
     { id: 2, message: "Skål! This is User Two checking in.", userId: 2 }
   ]);
+  const [message, setMessage] = useState("");
+  const [userId, setuserId] = useState("");
+
+  const addMessage = async (message: string, userId: string) => {
+    //post the game in here
+    const payload = await fetch(`${BASE_URL}/chatlog`, {
+      method : "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "Message" : message,
+        "UserId": userId
+      })
+    })  
+
+    const data = payload.text();
+    console.log("Sent:", data);
+  };
 
   return (
     <div style={{ border: '1px solid #444444', padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
@@ -33,14 +54,17 @@ export default function Home() {
         <input 
           type="text" 
           placeholder="Type a Viking message..." 
+          onChange={(e) => setMessage(e.target.value)}
           style={{ flexGrow: 1, padding: '8px', borderRadius: '4px', border: '1px solid #555', background: '#111', color: '#fff' }}
         />
         <input 
           type="text" 
           placeholder="Enter User Id..." 
+          onChange={(e) => setuserId(e.target.value)}
           style={{ flexGrow: 1, padding: '8px', borderRadius: '4px', border: '1px solid #555', background: '#111', color: '#fff' }}
         />
-        <button style={{ padding: '8px 16px', background: '#03dac6', color: '#000', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+        <button onClick={() => addMessage(message, userId)}
+          color = '#5b48c9'>
           Send
         </button>
       </div>
