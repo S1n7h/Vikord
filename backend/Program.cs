@@ -1,6 +1,8 @@
 using backend;
 using backend.Data;
 using backend.Dtos;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
@@ -12,16 +14,27 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.AllowAnyOrigin()   // Allows your Vite frontend origin
-              .AllowAnyMethod()   // Allows GET, POST, DELETE, etc.
-              .AllowAnyHeader();  // Allows "Content-Type" headers
+        policy.WithOrigins("http://localhost:6969")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
+builder.Configuration.AddEnvironmentVariables();
+
+builder.Configuration.AddUserSecrets<Program>();
+
+//AddAuthorisation is a IService, so it becomes method in builder.Serivices
+builder.Services.AddAuthorisation(builder.Configuration);
 
 var app = builder.Build();
 
+app.MigrateDb();
+
 app.UseCors("AllowReactApp");
+
+//app.UseHttpsRedirection();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -29,10 +42,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseAuthentication();
+
+app.UseAuthorization();
+
 app.MapChatEndpoints();
 
-app.MigrateDb();
-
-app.UseHttpsRedirection();
+app.MapAuthEndpoints();
 
 app.Run();

@@ -35,4 +35,4 @@ Content-Type: application/json
 DELETE http://localhost:5206/chatlog/5/2
 
 ### 7. Try to delete Message 1 (Should succeed with 204 No Content)
-DELETE http://localhost:5206/chatlog/8/1
+DELETE http://localhost:5206/chatlog/1

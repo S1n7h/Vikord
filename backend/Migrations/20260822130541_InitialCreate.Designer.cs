@@ -10,7 +10,7 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(ChatContext))]
-    [Migration("20260529115648_InitialCreate")]
+    [Migration("20260822130541_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -29,8 +29,9 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -41,11 +42,10 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Models.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
                 });
