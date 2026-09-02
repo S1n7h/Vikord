@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
+import { HubConnectionBuilder } from "@microsoft/signalr";
 
 const BASE_URL = "http://localhost:6769";
 
@@ -18,6 +18,7 @@ export default function Home() {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const textboxRef = useRef<HTMLInputElement>(null);
 
   // Tracks the ID of the message the user is currently hovering over
   const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
@@ -25,33 +26,60 @@ export default function Home() {
   // Create a handle that can point to an HTML element
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const messageInputRef = useRef<HTMLInputElement | null>(null);
+  // useEffect(() => {
+  //   updateMessage();
+  //   checkAuthentication();
+  // }, []);
+  // The [] means:
+  // Run this when the Home component is initially created.
+  // --------------------
+  //[] means "once"
+  // useEffect(() => {
+  //     console.log("Hello");
+  // }, []);
+  // When Home is first loaded:
+  // Home component created
+  //         ↓
+  // React renders it
+  //         ↓
+  // useEffect runs
+  //         ↓
+  // console.log("Hello")
+  // It won't run again just because your component re-renders.
 
-useEffect(() => {
-  const handleTyping = (e: KeyboardEvent) => {
-    // If the input is already focused, let the input handle the key normally
-    if (document.activeElement === messageInputRef.current) {
-      return;
-    }
+  useEffect(() => {
+  const connection = new HubConnectionBuilder()
+    .withUrl(`${BASE_URL}/messageHub`)
+    .withAutomaticReconnect()
+    .build();
 
-    // Ignore Shift, Enter, Ctrl, etc.
-    if (e.key.length !== 1) {
-      return;
-    }
+    connection.on("MessageDbUpdated", (newMessage) => {
+      console.log("New message received:", newMessage);      
+      setMessages((prevMessagesArray) => [...prevMessagesArray, newMessage] );
+    });
 
-    // Focus the input
-    messageInputRef.current?.focus();
+    connection.start()
+      .then(() => {
+        console.log("SignalR connected!");
+      })
+      .catch((error) => {
+        console.error("SignalR connection failed:", error);
+      });
+      //The key thing to understand is this:
+      // return () => {
+      //   connection.stop();
+      // };
+      // doesn't execute immediately.
+      // React interprets that returned function as:
+      // "When this effect needs to be cleaned up, execute this."
+      //the difference b/w return () => connection.stop(); and return () => {connection.stop()}; is,
+      //This distinction is subtle: with braces, you're calling stop() but the cleanup function itself returns undefined.
+    return () => {connection.stop()};
+  }, []);
 
-    // Put the first character into the message
-    setMessage(e.key);
-  };
-
-  window.addEventListener("keydown", handleTyping);
-
-  return () => {
-    window.removeEventListener("keydown", handleTyping);
-  };
-}, []);
+  const getAuthenticated = () => {
+    window.location.href = `${BASE_URL}/auth/login`;
+  }
 
   const updateMessage = async () => {
     const Messages = await fetch(`${BASE_URL}/chatlog`);
@@ -59,10 +87,6 @@ useEffect(() => {
     console.log(data);
     setMessages(data);      
   };
-
-  const getAuthenticated = () => {
-    window.location.href = `${BASE_URL}/auth/login`;
-  }
 
   useEffect(() => {
   const checkAuthentication = async () => {
@@ -121,12 +145,32 @@ useEffect(() => {
     setMessage("");
     // setUserId("");
 
-    await updateMessage();
     //scroll down
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
     }, 50);
   };
+
+  // window.addEventListener("keydown", (event) => {
+  //   setIsKeyPressed(true);
+  // })
+  window.addEventListener("keydown", (event) => {
+    // Regex matches exactly one letter (a-z, A-Z) or digit (0-9)
+    // const isAlphanumeric = /^[a-zA-Z0-9]$/.test(event.key);
+    const isPrintable = event.key.length === 1;
+    if (document.activeElement != textboxRef.current){
+      if (isPrintable){
+        setMessage((prevMessage) => event.key);
+        event.preventDefault();
+        textboxRef.current?.focus()
+      }
+    }
+  });
+
+  window.addEventListener("keydown", (event) => {
+    console.log(event.key, event.repeat);
+  });
+
 
   //you only need the userId of the user cus the delete button is already present
   const deleteMessage = async(id: string) => {
@@ -216,8 +260,8 @@ useEffect(() => {
       {/* 2. Message Creation Input Box */}
       <div style={{ display: 'flex', gap: '10px' }}>
         <input 
-          ref={messageInputRef}
-          type="text" 
+          type="text"
+          ref={textboxRef}
           placeholder="Type a Viking message..." 
           value={message}
           onChange={(e) => setMessage(e.target.value)}

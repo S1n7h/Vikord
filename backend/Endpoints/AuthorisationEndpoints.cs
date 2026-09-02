@@ -13,7 +13,7 @@ public static class AuthEndpoints
         {
             // Challenge the "Discord" scheme and set RedirectUri to your frontend (e.g. "http://localhost:5173")
             return Results.Challenge(
-            new AuthenticationProperties { RedirectUri = "http://localhost:5173" },
+            new AuthenticationProperties { RedirectUri = "http://localhost:6969/" },
             authenticationSchemes: ["Discord"]);
         });
 

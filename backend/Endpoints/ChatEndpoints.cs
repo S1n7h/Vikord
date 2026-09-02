@@ -2,6 +2,7 @@ using System.Security.Claims;
 using backend.Data;
 using backend.Dtos;
 using backend.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend;
@@ -52,7 +53,12 @@ public static class ChatEndpoints
         });
 
         // POST /chatlog - Save a new message to DB
-        group.MapPost("/", async (CreateMessageDto newMessage, ChatContext db, ClaimsPrincipal user, ILogger<Program> logger) =>
+        group.MapPost("/", async (
+            CreateMessageDto newMessage, 
+            ChatContext db, 
+            ClaimsPrincipal user, 
+            ILogger<Program> logger,         
+            IHubContext<MessageNotificationHub> hubContext) =>
         {
             //if user is trying to post a message but isn't authenticated, this redirects them to the authentication server
             if (user.Identity?.IsAuthenticated != true)
@@ -84,6 +90,13 @@ public static class ChatEndpoints
                 globalName,
                 discordUserId /* messageEntity.UserId */
             );
+            
+            //after backend receives POST request at this endpoint, it broadcasts "MessageDbUpdated" to frontend
+            //signalR notifies the connected clients that something happened. Since the useeffect containing 
+            //const connection = new HubConnectionBuilder() has connection.on in it, it receives this incoming 
+            //notification ie "MessageDbUpdated" along with the responseDto
+            //the responseDto then gets appended to the messages already present.
+            await hubContext.Clients.All.SendAsync("MessageDbUpdated", responseDto);
 
             return Results.Created($"/chatlog/{responseDto.Id}", responseDto);
         });
