@@ -53,6 +53,6 @@ app.MapChatEndpoints();
 app.MapAuthEndpoints();
 
 //declare routes using which clients can connect to the hub
-app.MapHub<MessageNotificationHub>("/messageHub");
+app.MapHub<ChatHub>("/messageHub");
 
 app.Run();

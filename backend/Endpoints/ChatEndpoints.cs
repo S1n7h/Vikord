@@ -34,8 +34,13 @@ public static class ChatEndpoints
         });
 
         // PUT /chatlog/{id} - Edit an existing message
-        group.MapPut("/{id}", async (int id, UpdateMessageDto updateDto, ChatContext db) =>
-        {
+        group.MapPut("/{id}", async (int id, UpdateMessageDto updateDto, ChatContext db, ClaimsPrincipal user,  ILogger<Program> logger) =>
+        {            
+            var currentAuthenticatedUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentAuthenticatedUserId is null) 
+                return Results.NotFound("Trying to pull a fast one, aren't ya?");
+                
             // 1. Find the message by its id using db.Messages.FindAsync(id)
             var messages = await db.Messages.FindAsync(id);
 
@@ -49,7 +54,7 @@ public static class ChatEndpoints
             await db.SaveChangesAsync();
 
             // 5. Return a Results.NoContent() or Results.Ok() to show success
-            return Results.NoContent();
+            return Results.Ok();
         });
 
         // POST /chatlog - Save a new message to DB
@@ -57,8 +62,9 @@ public static class ChatEndpoints
             CreateMessageDto newMessage, 
             ChatContext db, 
             ClaimsPrincipal user, 
-            ILogger<Program> logger,         
-            IHubContext<MessageNotificationHub> hubContext) =>
+            ILogger<Program> logger,
+            IHubContext<ChatHub> chatHub
+            /*HubConnectionContext hubConnectionContext*/) =>
         {
             //if user is trying to post a message but isn't authenticated, this redirects them to the authentication server
             if (user.Identity?.IsAuthenticated != true)
@@ -96,7 +102,7 @@ public static class ChatEndpoints
             //const connection = new HubConnectionBuilder() has connection.on in it, it receives this incoming 
             //notification ie "MessageDbUpdated" along with the responseDto
             //the responseDto then gets appended to the messages already present.
-            await hubContext.Clients.All.SendAsync("MessageDbUpdated", responseDto);
+            chatHub.SendMessage(responseDto);
 
             return Results.Created($"/chatlog/{responseDto.Id}", responseDto);
         });
@@ -105,15 +111,16 @@ public static class ChatEndpoints
         //the user is authenticated on the frontend, so you only require the message id, not the userId
         group.MapDelete("/{id}", async (int id, ChatContext db, ClaimsPrincipal user,  ILogger<Program> logger) =>
         {            
+            var currentAuthenticatedUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentAuthenticatedUserId is null) 
+                return Results.NotFound("Trying to pull a fast one, aren't ya?");
+
             var message = await db.Messages.FindAsync(id);
             
             if (message is null) return Results.NotFound();
 
             var messageUserId = message.UserId;
-            var currentAuthenticatedUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (currentAuthenticatedUserId is null) 
-                return Results.NotFound("Trying to pull a fast one, aren't ya?");
 
             if (currentAuthenticatedUserId != messageUserId)
             {

@@ -53,9 +53,9 @@ export default function Home() {
     .withAutomaticReconnect()
     .build();
 
-    connection.on("MessageDbUpdated", (newMessage) => {
-      console.log("New message received:", newMessage);      
-      setMessages((prevMessagesArray) => [...prevMessagesArray, newMessage] );
+    connection.on("ReceivedMessage", (responseDto) => {
+      console.log("New message received:", responseDto);      
+      setMessages((prevMessagesArray) => [...prevMessagesArray, responseDto] );
     });
 
     connection.start()
@@ -144,7 +144,7 @@ export default function Home() {
 
     setMessage("");
     // setUserId("");
-
+ 
     //scroll down
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
