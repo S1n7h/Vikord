@@ -102,14 +102,14 @@ public static class ChatEndpoints
             //const connection = new HubConnectionBuilder() has connection.on in it, it receives this incoming 
             //notification ie "MessageDbUpdated" along with the responseDto
             //the responseDto then gets appended to the messages already present.
-            chatHub.SendMessage(responseDto);
+            chatHub.Clients.All.SendAsync("Update", responseDto);
 
             return Results.Created($"/chatlog/{responseDto.Id}", responseDto);
         });
 
         // DELETE /chatlog/{id} - Remove a message
         //the user is authenticated on the frontend, so you only require the message id, not the userId
-        group.MapDelete("/{id}", async (int id, ChatContext db, ClaimsPrincipal user,  ILogger<Program> logger) =>
+        group.MapDelete("/{id}", async (int id, ChatContext db, ClaimsPrincipal user,  ILogger<Program> logger,IHubContext<ChatHub> chatHub) =>
         {            
             var currentAuthenticatedUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -133,6 +133,8 @@ public static class ChatEndpoints
                 db.Messages.Remove(message);
                 await db.SaveChangesAsync();
             }
+
+            chatHub.Clients.All.SendAsync("Delete", id);
 
             return Results.NoContent();
         });

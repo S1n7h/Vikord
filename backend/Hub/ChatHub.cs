@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.SignalR;
 using backend.Dtos;
-public class ChatHub : Hub
+
+public class ChatHub: Hub
 {
-    public static void DummyFunction()
+    private readonly IHubContext<Hub> _myHubContext;
+
+    public ChatHub(IHubContext<Hub> myHubContext)
     {
-        public async Task SendMessage(MessageDto responseDto)
-        => await Clients.All.SendAsync("ReceivedMessage", responseDto);
+        _myHubContext= myHubContext;
     }
-    
+
+    public async Task SendMessage(MessageDto responseDto)
+    {
+        await _myHubContext.Clients.All.SendAsync("Update", responseDto);
+    }      
 }

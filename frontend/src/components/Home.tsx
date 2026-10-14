@@ -53,10 +53,45 @@ export default function Home() {
     .withAutomaticReconnect()
     .build();
 
-    connection.on("ReceivedMessage", (responseDto) => {
+    connection.on("Update", (responseDto) => {
       console.log("New message received:", responseDto);      
       setMessages((prevMessagesArray) => [...prevMessagesArray, responseDto] );
+
+      //scroll down
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      }, 50);
     });
+
+
+    connection.on("Delete", (id) => {
+      console.log("Id of message to be deleted: ", id);      
+      
+      // Use the functional updater form to avoid stale closures
+      setMessages(prevMessages => {
+          const updatedMessages = prevMessages.filter(message => message.id !== id);
+          console.log("The updated message list will be: ", updatedMessages);
+          return updatedMessages;
+      });
+
+      // scroll down
+      setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      }, 50);
+  });
+    //  WHY DOES THIS NOT WORK??
+    // connection.on("Delete", (id) => {
+    //   console.log("Id of message to be deleted: ", id);      
+      
+    //   //const newMessageList = messages.filter(message => message.id !== id);
+
+    //   setMessages(messages.filter(message => message.id !== id));
+    //   console.log("The change was commited: ", messages);
+    //   //scroll down
+    //   setTimeout(() => {
+    //     messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    //   }, 50);
+    // });
 
     connection.start()
       .then(() => {
@@ -85,7 +120,12 @@ export default function Home() {
     const Messages = await fetch(`${BASE_URL}/chatlog`);
     const data = await Messages.json();
     console.log(data);
-    setMessages(data);      
+    setMessages(data);   
+    
+    //scroll down
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+    }, 50);
   };
 
   useEffect(() => {
